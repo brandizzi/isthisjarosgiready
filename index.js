@@ -5,6 +5,7 @@ var http = require('http');
 var fs = require('fs');
 var request = require('request');
 var tmp = require('tmp');
+var AdmZip = require('adm-zip');
 
 var showIndex = function showIndex(req, res) {
         res.sendFile(path.join(__dirname + '/public/index.html'));
@@ -13,7 +14,7 @@ var showIndex = function showIndex(req, res) {
 var checkJar = function (req, res) {
         var url = req.query.url;
         console.error('checking' + url);
-        downloadZipFileFromURL(url, function(err, contents) {
+        getManifestFileFromJarURL(url, function(err, contents) {
         	console.log('here we are');
         	console.log(err, contents);
         	if (err) throw err;
@@ -22,21 +23,43 @@ var checkJar = function (req, res) {
         });
 };
 
-var downloadToFile = function(url, path, cb) {
+var downloadJarToFile = function(url, path, cb) {
 	var stream = fs.createWriteStream(path);
 	console.log('downloading to file ' + path);
 
-	request(url).pipe(stream).on('close', function() {
-		fs.readFile(path, 'utf8', cb);
+	var req;
+	try {
+		req = request(url).pipe(stream);
+	} catch (err) {
+		cb(err);
+		return;
+	}
+
+	req.on('close', function(err) {
+		if (err) {
+			cb(err);
+			return;
+		}
+
+		var zip = new AdmZip(path);
+
+		try {
+			var manifest = zip.readAsText('META-INF/MANIFEST.MF');
+		} catch (err) {
+			cb(err);
+			return;
+		}
+
+		cb(err, manifest);
 	});
 };
 
-var downloadZipFileFromURL = function (url, cb) {
+var getManifestFileFromJarURL = function (url, cb) {
         console.log('downloading zip '+ url);
 	tmp.file(function(err, path) {
 		console.log('create temp file ' + path);
 		if (err) throw err;
-		downloadToFile(url, path, cb);
+		downloadJarToFile(url, path, cb);
 	});
 };
 
