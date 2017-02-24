@@ -6,6 +6,7 @@ var fs = require('fs');
 var request = require('request');
 var tmp = require('tmp');
 var AdmZip = require('adm-zip');
+var jsdom = require("jsdom");
 
 var showIndex = function showIndex(req, res) {
         res.sendFile(path.join(__dirname + '/public/index.html'));
@@ -18,8 +19,29 @@ var checkJar = function (req, res) {
         	console.log('here we are');
         	console.log(err, contents);
         	if (err) throw err;
-        	res.write(contents.toString());
-        	res.end();
+
+		var soughtKey = "Bundle-SymbolicName:"
+		contents = "\n" + contents;
+		var isOSGi = contents.includes(soughtKey);
+
+        	jsdom.env({
+        		file: "public/jar-info.html",
+        		done: function(err, window) {
+        			var doc = window.document;
+        			var title = doc.getElementsByTagName("title");
+        			title[0].textContent = "Is " + url + " OSGI-ready?";
+        			var jarFile = doc.getElementsByClassName('jar-file');
+        			jarFile[0].textContent = url;
+        			var jarIsOSGi = doc.getElementsByClassName('jar-is-osgi');
+        			jarIsOSGi[0].innerHTML = ""+isOSGi;
+        			console.log(jarIsOSGi[0]);
+        			res.write(jsdom.serializeDocument(doc));
+        			res.end();
+
+				window.close();
+        		}
+        	});
+
         });
 };
 
