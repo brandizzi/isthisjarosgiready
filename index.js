@@ -48,8 +48,9 @@ var fillErrorPage = (doc, url, report) => {
 var respondError = (req, res, url, report) => {
     jsdom.env({
         file: "public/error.html",
+        FetchExternalResources: false,
+        ProcessExternalResources: false,
         done: (err, window) => {
-                console.log('report ', report);
             if (err) {
                 report = errorReport(
                     err, 'failure.cannot_parse_template', 500,
@@ -75,53 +76,57 @@ var respondError = (req, res, url, report) => {
     });
 };
 
+var respondOK = (req, res, url, contents) => {
+    var soughtKey = "\nBundle-SymbolicName:"
+    contents = "\n" + contents;
+    var isOSGi = contents.includes(soughtKey);
+
+    jsdom.env({
+        file: "public/jar-info.html",
+        FetchExternalResources: false,
+        ProcessExternalResources: false,
+        done: function(err, window) {
+            if (err) {
+                var report = errorReport(
+                    err, 'failure.cannot_parse_template', 500,
+                    'Failed to parse template public/jar-info.html: ' + err);
+
+                respondError(req, res, url, report);
+
+                return;
+            }
+
+            var doc = window.document;
+            var title = doc.getElementsByTagName("title");
+
+            title[0].textContent = "Is " + url + " OSGI-ready?";
+
+            var jarFile = doc.getElementsByClassName('jar-file');
+
+            jarFile[0].textContent = url;
+
+            var jarIsOSGi = doc.getElementsByClassName('jar-is-osgi');
+
+            jarIsOSGi[0].innerHTML = ""+isOSGi;
+
+            res.write(jsdom.serializeDocument(doc));
+
+            res.end();
+            window.close();
+        }
+    });
+};
+
 var checkJar = function (req, res) {
     var url = req.query.url;
 
     getManifestFileFromJarURL(url, function(report, contents) {
         if (report) {
             respondError(req, res, url, report);
-            return; 
+            return;
         }
 
-        var soughtKey = "\nBundle-SymbolicName:"
-        contents = "\n" + contents;
-        var isOSGi = contents.includes(soughtKey);
-
-        jsdom.env({
-            file: "public/jar-info.html",
-            FetchExternalResources: false,
-            ProcessExternalResources: false,
-            done: function(err, window) {
-                if (err) {
-                    var report = errorReport(
-                        err, 'failure.cannot_parse_template', 500,
-                        'Failed to parse template public/jar-info.html: ' + err);
- 
-                    respondError(req, res, url, report);
- 
-                    return;
-                }
-
-                var doc = window.document;
-                var title = doc.getElementsByTagName("title");
-
-                title[0].textContent = "Is " + url + " OSGI-ready?";
-
-                var jarFile = doc.getElementsByClassName('jar-file');
-
-                jarFile[0].textContent = url;
-
-                var jarIsOSGi = doc.getElementsByClassName('jar-is-osgi');
-
-                jarIsOSGi[0].innerHTML = ""+isOSGi;
-
-                res.write(jsdom.serializeDocument(doc));
- 
-                res.end();
-                window.close();
-            }
-        });
+        respondOK(req, res, url, contents);
 
     });
 };
