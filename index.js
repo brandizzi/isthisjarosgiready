@@ -45,19 +45,19 @@ var fillErrorPage = (doc, url, report) => {
     return jsdom.serializeDocument(doc);
 };
 
-var respondError = (req, res, url, report) => {
+var fillTemplate = (res, path, filler) => {
     jsdom.env({
-        file: "public/error.html",
+        file: path,
         FetchExternalResources: false,
         ProcessExternalResources: false,
         done: (err, window) => {
             if (err) {
                 report = errorReport(
                     err, 'failure.cannot_parse_template', 500,
-                    'Failed to parse template public/error.html: ' + err);
+                    'Failed to parse template ' + path + ': ' + err);
 
                 res.status(report.statusCode);
-                res.write(fillErrorPage(doc, url, report));
+                res.write(fillErrorPage(null, url, report));
 
                 res.end();
                 window.close();
@@ -67,53 +67,42 @@ var respondError = (req, res, url, report) => {
 
             var doc = window.document;
 
-            res.status(report.statusCode);
-            res.write(fillErrorPage(doc, url, report));
+            content = filler(doc);
 
+            res.write(content);
             res.end();
             window.close();
         }
     });
 };
 
+var respondError = (req, res, url, report) => {
+    res.status(report.statusCode);
+
+    fillTemplate(res, 'public/error.html', (doc) => {
+        return fillErrorPage(doc, url, report);
+    });
+};
+
 var respondOK = (req, res, url, contents) => {
-    var soughtKey = "\nBundle-SymbolicName:"
-    contents = "\n" + contents;
-    var isOSGi = contents.includes(soughtKey);
+    fillTemplate(res, 'public/jar-info.html', (doc) => {
+        var soughtKey = "\nBundle-SymbolicName:"
+        contents = "\n" + contents;
+        var isOSGi = contents.includes(soughtKey);
 
-    jsdom.env({
-        file: "public/jar-info.html",
-        FetchExternalResources: false,
-        ProcessExternalResources: false,
-        done: function(err, window) {
-            if (err) {
-                var report = errorReport(
-                    err, 'failure.cannot_parse_template', 500,
-                    'Failed to parse template public/jar-info.html: ' + err);
+        var title = doc.getElementsByTagName("title");
 
-                respondError(req, res, url, report);
+        title[0].textContent = "Is " + url + " OSGI-ready?";
 
-                return;
-            }
+        var jarFile = doc.getElementsByClassName('jar-file');
 
-            var doc = window.document;
-            var title = doc.getElementsByTagName("title");
+        jarFile[0].textContent = url;
 
-            title[0].textContent = "Is " + url + " OSGI-ready?";
+        var jarIsOSGi = doc.getElementsByClassName('jar-is-osgi');
 
-            var jarFile = doc.getElementsByClassName('jar-file');
+        jarIsOSGi[0].innerHTML = ""+isOSGi;
 
-            jarFile[0].textContent = url;
-
-            var jarIsOSGi = doc.getElementsByClassName('jar-is-osgi');
-
-            jarIsOSGi[0].innerHTML = ""+isOSGi;
-
-            res.write(jsdom.serializeDocument(doc));
-
-            res.end();
-            window.close();
-        }
+        return jsdom.serializeDocument(doc);
     });
 };
 
