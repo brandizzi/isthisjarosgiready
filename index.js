@@ -1,11 +1,11 @@
 var express = require('express');
 var morgan = require('morgan');
 var path = require('path');
-var AdmZip = require('adm-zip');
 
 var fillTemplate = require('./fillTemplate.js').fillTemplate;
 var downloadToTempFile = require('./downloadToTempFile.js').downloadToTempFile;
 var errorReport = require('./errorReport.js').errorReport;
+var getManifestFromPath = require('./getManifestFromPath').getManifestFromPath;
 
 var showIndex = function showIndex(req, res) {
         res.sendFile(path.join(__dirname + '/public/index.html'));
@@ -61,44 +61,23 @@ var respondOK = (req, res, url, contents) => {
 var checkJar = function (req, res) {
     var url = req.query.url;
 
-    getManifestFileFromJarURL(url, function(report, contents) {
-        if (report) {
-            respondError(req, res, url, report);
-            return;
-        }
-
-        respondOK(req, res, url, contents);
-
-    });
-};
-
-var getManifestFileFromJarURL = (url, cb) => {
     downloadToTempFile(url, (report, path) => {
         if (report) {
-            cb(report);
+            respondError(req, res, url, report);
 
             return;
         }
 
-        var manifest;
-        try {
-            var zip = new AdmZip(path);
-            manifest = zip.readAsText('META-INF/MANIFEST.MF');
-        } catch (err) {
-            var report = errorReport(
-                err, 'failure.cannot_find_manifest_mf', 415,
-                'File at ' + url + 'is NO Zip or contains no MANIFEST.MF');
+        getManifestFromPath(path, (report, contents) => {
+            if (report) {
+                respondError(req, res, url, report);
+                return;
+            }
 
-            cb(report);
-
-            return;
-        }
-
-        cb(undefined, manifest);
+            respondOK(req, res, url, contents);
+        });
     });
 };
-
-
 
 var app = express();
 
