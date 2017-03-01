@@ -37,35 +37,31 @@ var respondError = (req, res, url, report) => {
     });
 };
 
-var respondOK = (req, res, url, contents, hash) => {
+var respondOK = (req, res, jarInfo) => {
     fillTemplate(res, 'public/jar-info.html', (doc) => {
-        var soughtKey = "\nBundle-SymbolicName:"
-        contents = "\n" + contents;
-        var isOSGi = contents.includes(soughtKey);
-
         var title = doc.getElementsByTagName("title");
 
-        title[0].textContent = "Is " + url + " OSGI-ready?";
+        title[0].textContent = "Is " + jarInfo.url + " OSGI-ready?";
 
         var jarHash = doc.getElementsByClassName('jar-hash');
 
         for (var e of jarHash) {
-            e.textContent = hash;
+            e.textContent = jarInfo.hash;
         }
 
         var jarFiles = doc.getElementsByClassName('jar-file');
 
         for (var e of jarFiles) {
-            e.textContent = url;
+            e.textContent = jarInfo.url;
         }
 
         var jarURLs = doc.getElementsByClassName('jar-urls');
 
-        jarURLs[0].innerHTML = '<li>' + url + '</li>';
+        jarURLs[0].innerHTML = '<li>' + jarInfo.url + '</li>';
 
         var jarIsOSGi = doc.getElementsByClassName('jar-is-osgi');
 
-        jarIsOSGi[0].innerHTML = ""+isOSGi;
+        jarIsOSGi[0].innerHTML = ""+ jarInfo.isOSGi;
 
         return doc;
     });
@@ -74,21 +70,33 @@ var respondOK = (req, res, url, contents, hash) => {
 var checkJar = function (req, res) {
     var url = req.query.url;
 
+    var jarInfo = {
+        url: url
+    };
+
     downloadToTempFile(url, (report, path) => {
         if (report) {
             respondError(req, res, url, report);
 
             return;
         }
-        
+
+        jarInfo.temporaryPath = path;
+
         getSHA256Hash(path, (report, hash) => {
+            jarInfo.hash = hash;
+
             getManifestFromPath(path, (report, contents) => {
                 if (report) {
                     respondError(req, res, url, report);
                     return;
                 }
 
-                respondOK(req, res, url, contents, hash);
+                var soughtKey = "\nBundle-SymbolicName:"
+                contents = "\n" + contents;
+                jarInfo.isOSGi = contents.includes(soughtKey);
+
+                respondOK(req, res, jarInfo);
             });
         });
     });
