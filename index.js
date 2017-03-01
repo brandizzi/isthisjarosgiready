@@ -86,54 +86,7 @@ var checkJar = function (req, res) {
     });
 };
 
-var downloadJarToFile = (url, path, cb) => {
-    var stream = fs.createWriteStream(path);
-
-    var req;
-    try {
-        req = request(url);
-    } catch (err) {
-        var report = errorReport(
-            err, 'failure.cannot_get_file', 404,
-            'Failed to get file from ' + url + ': ' + err);
-
-        cb(report);
-
-        return;
-    }
-
-    var stream;
-    try {
-        stream  = req.pipe(stream);
-    } catch (err) {
-        var report = errorReport(
-            err, 'failure.cannot_pipe_to_stream', 500,
-            'Failed to pipe ' + url + ' to ' + path ,+': ' + err);
-
-        cb(report);
-
-        return;
-    }
-
-    stream.on('finish', () => {
-        try {
-            var zip = new AdmZip(path);
-            var manifest = zip.readAsText('META-INF/MANIFEST.MF');
-        } catch (err) {
-            var report = errorReport(
-                err, 'failure.cannot_find_manifest_mf', 415,
-                'File at ' + url + 'is NO Zip or contains no MANIFEST.MF');
-
-            cb(report);
-
-            return;
-        }
-
-        cb(undefined, manifest);
-    });
-};
-
-var getManifestFileFromJarURL = (url, cb) => {
+var downloadToTempFile = (url, cb) => {
     tmp.file((err, path) => {
         if (err) {
             var report = errorReport(
@@ -145,7 +98,63 @@ var getManifestFileFromJarURL = (url, cb) => {
             return;
         }
 
-        downloadJarToFile(url, path, cb);
+
+        var req;
+        try {
+            req = request(url);
+        } catch (err) {
+            var report = errorReport(
+                err, 'failure.cannot_get_file', 404,
+                'Failed to get file from ' + url + ': ' + err);
+
+            cb(report);
+
+            return;
+        }
+
+        var stream = fs.createWriteStream(path);
+
+        try {
+            stream = req.pipe(stream);
+        } catch (err) {
+            var report = errorReport(
+                err, 'failure.cannot_pipe_to_stream', 500,
+                'Failed to pipe ' + url + ' to ' + path ,+': ' + err);
+
+            cb(report);
+
+            return;
+        }
+
+        stream.on('finish', () => {
+            cb(undefined, path);
+        });
+    });
+};
+
+var getManifestFileFromJarURL = (url, cb) => {
+    downloadToTempFile(url, (report, path) => {
+        if (report) {
+            cb(report);
+
+            return;
+        }
+
+        var manifest;
+        try {
+            var zip = new AdmZip(path);
+            manifest = zip.readAsText('META-INF/MANIFEST.MF');
+        } catch (err) {
+            var report = errorReport(
+                err, 'failure.cannot_find_manifest_mf', 415,
+                'File at ' + url + 'is NO Zip or contains no MANIFEST.MF');
+
+            cb(report);
+
+            return;
+        }
+
+        cb(undefined, manifest);
     });
 };
 
