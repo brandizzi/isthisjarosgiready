@@ -91,9 +91,7 @@ var downloadJarToFile = (url, path, cb) => {
 
     var req;
     try {
-        console.log('downloading file '+ url);
         req = request(url);
-        console.log('download completed');
     } catch (err) {
         var report = errorReport(
             err, 'failure.cannot_get_file', 404,
@@ -106,9 +104,7 @@ var downloadJarToFile = (url, path, cb) => {
 
     var stream;
     try {
-        console.log('streaming ' + url + ' content to file ' + path);
         stream  = req.pipe(stream);
-        console.log('streaming completed.')
     } catch (err) {
         var report = errorReport(
             err, 'failure.cannot_pipe_to_stream', 500,
@@ -121,14 +117,9 @@ var downloadJarToFile = (url, path, cb) => {
 
     stream.on('finish', () => {
         try {
-            console.log('opening zip file ' + path);
             var zip = new AdmZip(path);
-            console.log('zip file opened.');
-            console.log('extracting MANIFEST.MF.');
             var manifest = zip.readAsText('META-INF/MANIFEST.MF');
-            console.log('MANIFEST.MF extracted.');
         } catch (err) {
-            console.log(err);
             var report = errorReport(
                 err, 'failure.cannot_find_manifest_mf', 415,
                 'File at ' + url + 'is NO Zip or contains no MANIFEST.MF');
@@ -143,11 +134,7 @@ var downloadJarToFile = (url, path, cb) => {
 };
 
 var getManifestFileFromJarURL = (url, cb) => {
-    console.log('downloading zip '+ url);
-
     tmp.file((err, path) => {
-        console.log('create temp file ' + path);
- 
         if (err) {
             var report = errorReport(
                 err, 'failure.cannot_create_temp_file', 500,
