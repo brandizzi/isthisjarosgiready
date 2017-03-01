@@ -6,6 +6,7 @@ var fillTemplate = require('./fillTemplate.js').fillTemplate;
 var downloadToTempFile = require('./downloadToTempFile.js').downloadToTempFile;
 var errorReport = require('./errorReport.js').errorReport;
 var getManifestFromPath = require('./getManifestFromPath').getManifestFromPath;
+var getSHA256Hash = require('./getSHA256Hash').getSHA256Hash;
 
 var showIndex = function showIndex(req, res) {
         res.sendFile(path.join(__dirname + '/public/index.html'));
@@ -36,7 +37,7 @@ var respondError = (req, res, url, report) => {
     });
 };
 
-var respondOK = (req, res, url, contents) => {
+var respondOK = (req, res, url, contents, hash) => {
     fillTemplate(res, 'public/jar-info.html', (doc) => {
         var soughtKey = "\nBundle-SymbolicName:"
         contents = "\n" + contents;
@@ -46,9 +47,21 @@ var respondOK = (req, res, url, contents) => {
 
         title[0].textContent = "Is " + url + " OSGI-ready?";
 
-        var jarFile = doc.getElementsByClassName('jar-file');
+        var jarHash = doc.getElementsByClassName('jar-hash');
 
-        jarFile[0].textContent = url;
+        for (var e of jarHash) {
+            e.textContent = hash;
+        }
+
+        var jarFiles = doc.getElementsByClassName('jar-file');
+
+        for (var e of jarFiles) {
+            e.textContent = url;
+        }
+
+        var jarURLs = doc.getElementsByClassName('jar-urls');
+
+        jarURLs[0].innerHTML = '<li>' + url + '</li>';
 
         var jarIsOSGi = doc.getElementsByClassName('jar-is-osgi');
 
@@ -67,14 +80,16 @@ var checkJar = function (req, res) {
 
             return;
         }
+        
+        getSHA256Hash(path, (report, hash) => {
+            getManifestFromPath(path, (report, contents) => {
+                if (report) {
+                    respondError(req, res, url, report);
+                    return;
+                }
 
-        getManifestFromPath(path, (report, contents) => {
-            if (report) {
-                respondError(req, res, url, report);
-                return;
-            }
-
-            respondOK(req, res, url, contents);
+                respondOK(req, res, url, contents, hash);
+            });
         });
     });
 };
