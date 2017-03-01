@@ -6,7 +6,8 @@ var fs = require('fs');
 var request = require('request');
 var tmp = require('tmp');
 var AdmZip = require('adm-zip');
-var jsdom = require("jsdom");
+
+var fillTemplate = require('./fillTemplate.js').fillTemplate;
 
 var showIndex = function showIndex(req, res) {
         res.sendFile(path.join(__dirname + '/public/index.html'));
@@ -24,63 +25,28 @@ var errorReport = (err, failureType, statusCode, logMessage) => {
     };
 }
 
-var fillErrorPage = (doc, url, report) => {
-    if (report.failureType == 'failure.cannot_parse_template') {
-        return '<p>Template error: ' + JSON.stringify(err);
-    }
-
-    var title = doc.getElementsByTagName("title");
-
-    title[0].textContent = "We could not check " + url + " :(";
-
-    var jarFile = doc.getElementsByClassName('jar-file');
-    jarFile[0].textContent = url;
-
-    var errorType = doc.getElementsByClassName('error-type');
-    errorType[0].textContent = report.failureType;
-
-    var errorData = doc.getElementsByClassName('error-data');
-    errorData[0].innerHTML = report.errorData;
-
-    return jsdom.serializeDocument(doc);
-};
-
-var fillTemplate = (res, path, filler) => {
-    jsdom.env({
-        file: path,
-        FetchExternalResources: false,
-        ProcessExternalResources: false,
-        done: (err, window) => {
-            if (err) {
-                report = errorReport(
-                    err, 'failure.cannot_parse_template', 500,
-                    'Failed to parse template ' + path + ': ' + err);
-
-                res.status(report.statusCode);
-                res.write(fillErrorPage(null, url, report));
-
-                res.end();
-                window.close();
-
-                return;
-            }
-
-            var doc = window.document;
-
-            content = filler(doc);
-
-            res.write(content);
-            res.end();
-            window.close();
-        }
-    });
-};
-
 var respondError = (req, res, url, report) => {
     res.status(report.statusCode);
 
     fillTemplate(res, 'public/error.html', (doc) => {
-        return fillErrorPage(doc, url, report);
+        if (report.failureType == 'failure.cannot_parse_template') {
+            return '<p>Template error: ' + JSON.stringify(err);
+        }
+
+        var title = doc.getElementsByTagName("title");
+
+        title[0].textContent = "We could not check " + url + " :(";
+
+        var jarFile = doc.getElementsByClassName('jar-file');
+        jarFile[0].textContent = url;
+
+        var errorType = doc.getElementsByClassName('error-type');
+        errorType[0].textContent = report.failureType;
+
+        var errorData = doc.getElementsByClassName('error-data');
+        errorData[0].innerHTML = report.errorData;
+
+        return doc;
     });
 };
 
@@ -102,7 +68,7 @@ var respondOK = (req, res, url, contents) => {
 
         jarIsOSGi[0].innerHTML = ""+isOSGi;
 
-        return jsdom.serializeDocument(doc);
+        return doc;
     });
 };
 
