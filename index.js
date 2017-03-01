@@ -1,29 +1,15 @@
 var express = require('express');
 var morgan = require('morgan');
 var path = require('path');
-var http = require('http');
-var fs = require('fs');
-var request = require('request');
-var tmp = require('tmp');
 var AdmZip = require('adm-zip');
 
 var fillTemplate = require('./fillTemplate.js').fillTemplate;
+var downloadToTempFile = require('./downloadToTempFile.js').downloadToTempFile;
+var errorReport = require('./errorReport.js').errorReport;
 
 var showIndex = function showIndex(req, res) {
         res.sendFile(path.join(__dirname + '/public/index.html'));
 };
-
-var errorReport = (err, failureType, statusCode, logMessage) => {
-    if (logMessage) {
-        console.log(logMessage);
-    }
-
-    return {
-        errorData: err,
-        failureType : failureType,
-        statusCode: statusCode
-    };
-}
 
 var respondError = (req, res, url, report) => {
     res.status(report.statusCode);
@@ -83,52 +69,6 @@ var checkJar = function (req, res) {
 
         respondOK(req, res, url, contents);
 
-    });
-};
-
-var downloadToTempFile = (url, cb) => {
-    tmp.file((err, path) => {
-        if (err) {
-            var report = errorReport(
-                err, 'failure.cannot_create_temp_file', 500,
-                'Could not creawte a temporary file.');
-
-            cb(report);
-
-            return;
-        }
-
-
-        var req;
-        try {
-            req = request(url);
-        } catch (err) {
-            var report = errorReport(
-                err, 'failure.cannot_get_file', 404,
-                'Failed to get file from ' + url + ': ' + err);
-
-            cb(report);
-
-            return;
-        }
-
-        var stream = fs.createWriteStream(path);
-
-        try {
-            stream = req.pipe(stream);
-        } catch (err) {
-            var report = errorReport(
-                err, 'failure.cannot_pipe_to_stream', 500,
-                'Failed to pipe ' + url + ' to ' + path ,+': ' + err);
-
-            cb(report);
-
-            return;
-        }
-
-        stream.on('finish', () => {
-            cb(undefined, path);
-        });
     });
 };
 
