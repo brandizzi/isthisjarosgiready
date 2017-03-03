@@ -52,7 +52,7 @@ var respondOK = (req, res, jarInfo) => {
         var jarFiles = doc.getElementsByClassName('jar-file');
 
         for (var e of jarFiles) {
-            e.textContent = jarInfo.url;
+            e.textContent = jarInfo.filename;
         }
 
         var jarURLs = doc.getElementsByClassName('jar-urls');
@@ -74,7 +74,7 @@ var checkJar = function (req, res) {
         url: url
     };
 
-    downloadToTempFile(url, (report, path) => {
+    downloadToTempFile(url, (report, path, filename) => {
         if (report) {
             respondError(req, res, url, report);
 
@@ -82,6 +82,7 @@ var checkJar = function (req, res) {
         }
 
         jarInfo.temporaryPath = path;
+        jarInfo.filename = filename;
 
         getSHA256Hash(path, (report, hash) => {
             jarInfo.hash = hash;
