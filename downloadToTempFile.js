@@ -2,7 +2,7 @@ var fs = require('fs');
 var request = require('request');
 var tmp = require('tmp');
 
-var errorReport = require('./errorReport.js').errorReport;
+var errorReport = require('./errorReport.js');
 
 var urlparse = require('url').parse;
 var basename = require('path').basename;
@@ -78,4 +78,4 @@ var downloadToTempFile = (url, cb) => {
     });
 };
 
-exports.downloadToTempFile = downloadToTempFile;
+module.exports = downloadToTempFile;

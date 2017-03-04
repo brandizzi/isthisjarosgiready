@@ -31,4 +31,4 @@ var fillTemplate = (res, path, filler) => {
     });
 };
 
-exports.fillTemplate = fillTemplate;
+module.exports = fillTemplate;

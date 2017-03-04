@@ -2,11 +2,11 @@ var express = require('express');
 var morgan = require('morgan');
 var path = require('path');
 
-var fillTemplate = require('./fillTemplate.js').fillTemplate;
-var downloadToTempFile = require('./downloadToTempFile.js').downloadToTempFile;
-var errorReport = require('./errorReport.js').errorReport;
-var getManifestFromPath = require('./getManifestFromPath').getManifestFromPath;
-var getSHA256Hash = require('./getSHA256Hash').getSHA256Hash;
+var fillTemplate = require('./fillTemplate.js');
+var downloadToTempFile = require('./downloadToTempFile.js');
+var errorReport = require('./errorReport.js');
+var getManifestFromPath = require('./getManifestFromPath');
+var getSHA256Hash = require('./getSHA256Hash');
 
 var showIndex = function showIndex(req, res) {
         res.sendFile(path.join(__dirname + '/public/index.html'));

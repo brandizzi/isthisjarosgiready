@@ -14,4 +14,4 @@ var getSHA256Hash = function(path, cb) {
     });
 };
 
-exports.getSHA256Hash = getSHA256Hash;
+module.exports = getSHA256Hash;

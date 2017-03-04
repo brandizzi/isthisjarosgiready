@@ -1,6 +1,6 @@
 var AdmZip = require('adm-zip');
 
-var errorReport = require('./errorReport.js').errorReport;
+var errorReport = require('./errorReport.js');
 
 var getManifestFromPath = (path, cb) => {
     var manifest;
@@ -20,4 +20,4 @@ var getManifestFromPath = (path, cb) => {
     cb(undefined, manifest);
 };
 
-exports.getManifestFromPath = getManifestFromPath;
+module.exports = getManifestFromPath;

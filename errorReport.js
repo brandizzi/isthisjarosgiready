@@ -10,4 +10,4 @@ var errorReport = (err, failureType, statusCode, logMessage) => {
     };
 }
 
-exports.errorReport = errorReport;
+module.exports = errorReport;
