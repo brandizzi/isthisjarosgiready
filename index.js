@@ -41,7 +41,7 @@ var respondOK = (req, res, jarInfo) => {
     fillTemplate(res, 'public/jar-info.html', (doc) => {
         var title = doc.getElementsByTagName("title");
 
-        title[0].textContent = "Is " + jarInfo.url + " OSGI-ready?";
+        title[0].textContent = "Is " + jarInfo.filename + " OSGI-ready?";
 
         var jarHash = doc.getElementsByClassName('jar-hash');
 

@@ -14,8 +14,6 @@ var jarFileNameRegex = /\([\w.,\s+-]+\.jar\)/;
 var extractJarName = function(response) {
     var contentDisposition = response.headers['content-disposition'];
 
-    console.log(contentDisposition);
-
     var matching = contentDispositionRegex.exec(contentDisposition);
 
     if (matching && jarFileNameRegex.test(matching[1])) {
@@ -28,8 +26,6 @@ var extractJarName = function(response) {
 
     return basename(path);
 }
-
-
 
 var downloadToTempFile = (url, cb) => {
     tmp.file((err, path) => {
