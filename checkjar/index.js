@@ -8,6 +8,9 @@ var errorReport = require('./errorReport.js');
 var getManifestFromPath = require('./getManifestFromPath');
 var getSHA256Hash = require('./getSHA256Hash');
 
+
+const WeDeploy = require('wedeploy');
+
 var showIndex = function showIndex(req, res) {
         res.sendFile(path.join(__dirname + '/public/index.html'));
 };
@@ -86,18 +89,51 @@ var checkJar = function (req, res) {
 
         getSHA256Hash(path, (report, hash) => {
             jarInfo.hash = hash;
+            var data = WeDeploy.data('http://data.itjor.wedeploy.io');
 
-            getManifestFromPath(path, (report, contents) => {
-                if (report) {
-                    respondError(req, res, url, report);
-                    return;
-                }
+            data.get('jar/'+hash)
+            .then((ji) => {
+                jarInfo.hash = ji.id;
+                jarInfo.filename = ji.filenames[0];
+                jarInfo.isOSGi = ji.osgiready;
+                jarInfo.url = ji.urls[0];
+            })
+            .catch((err) => {
+                console.log(err);
+                getManifestFromPath(path, (report, contents) => {
+                    if (report) {
+                        throw report;
+                    }
 
-                var soughtKey = "\nBundle-SymbolicName:"
-                contents = "\n" + contents;
-                jarInfo.isOSGi = contents.includes(soughtKey);
+                    var soughtKey = "\nBundle-SymbolicName:"
+                    contents = "\n" + contents;
+                    jarInfo.isOSGi = contents.includes(soughtKey);
 
+                    data.create('jar', {
+                        id: jarInfo.hash,
+                        filenames: [jarInfo.filename],
+                        osgiready: jarInfo.isOSGi,
+                        urls: [jarInfo.url],
+                        pom: [
+                            {
+                                groupId: null,
+                                artifactId: null,
+                                version: null
+                            }
+                        ]
+                    })
+                    .then((a) => {
+                        console.log('document created', a);
+                    }).catch((b) => {
+                        console.error('error', b);
+                    });
+                });
+            })
+            .then(() => {
                 respondOK(req, res, jarInfo);
+            })
+            .catch((report) => {
+                respondError(req, res, url, report);
             });
         });
     });
