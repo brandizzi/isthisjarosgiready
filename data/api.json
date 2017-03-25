@@ -1,6 +1,9 @@
 [
 	{
 		"path": "/jar",
-		"method": ["GET", "POST"]
+		"method": ["GET", "POST", "PUT", "DELETE"],
+		"data": true
 	}
 ]
+
+
