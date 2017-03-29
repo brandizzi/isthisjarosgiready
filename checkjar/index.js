@@ -96,11 +96,8 @@ var checkJar = function (req, res) {
                 jarInfo = ji;
             })
             .catch((err) => {
-                getManifestFromPath(path, (report, contents) => {
-                    if (report) {
-                        throw report;
-                    }
-
+                return getManifestFromPath(path)
+                .then((contents) => {
                     var soughtKey = "\nBundle-SymbolicName:"
                     contents = "\n" + contents;
                     jarInfo.osgiready = contents.includes(soughtKey);
