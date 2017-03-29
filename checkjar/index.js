@@ -44,27 +44,27 @@ var respondOK = (req, res, jarInfo) => {
     fillTemplate(res, 'public/jar-info.html', (doc) => {
         var title = doc.getElementsByTagName("title");
 
-        title[0].textContent = "Is " + jarInfo.filename + " OSGI-ready?";
+        title[0].textContent = "Is " + jarInfo.filenames[0] + " OSGI-ready?";
 
         var jarHash = doc.getElementsByClassName('jar-hash');
 
         for (var e of jarHash) {
-            e.textContent = jarInfo.hash;
+            e.textContent = jarInfo.id;
         }
 
         var jarFiles = doc.getElementsByClassName('jar-file');
 
         for (var e of jarFiles) {
-            e.textContent = jarInfo.filename;
+            e.textContent = jarInfo.filenames[0];
         }
 
         var jarURLs = doc.getElementsByClassName('jar-urls');
 
-        jarURLs[0].innerHTML = '<li>' + jarInfo.url + '</li>';
+        jarURLs[0].innerHTML = '<li>' + jarInfo.urls[0] + '</li>';
 
         var jarIsOSGi = doc.getElementsByClassName('jar-is-osgi');
 
-        jarIsOSGi[0].innerHTML = ""+ jarInfo.isOSGi;
+        jarIsOSGi[0].innerHTML = ""+ jarInfo.osgiready;
 
         return doc;
     });
@@ -74,7 +74,7 @@ var checkJar = function (req, res) {
     var url = req.query.url;
 
     var jarInfo = {
-        url: url
+        urls: [url]
     };
 
     downloadToTempFile(url, (report, path, filename) => {
@@ -85,21 +85,17 @@ var checkJar = function (req, res) {
         }
 
         jarInfo.temporaryPath = path;
-        jarInfo.filename = filename;
+        jarInfo.filenames = [filename];
 
         getSHA256Hash(path, (report, hash) => {
-            jarInfo.hash = hash;
+            jarInfo.id = hash;
             var data = WeDeploy.data('http://data.itjor.wedeploy.io');
 
             data.get('jar/'+hash)
             .then((ji) => {
-                jarInfo.hash = ji.id;
-                jarInfo.filename = ji.filenames[0];
-                jarInfo.isOSGi = ji.osgiready;
-                jarInfo.url = ji.urls[0];
+                jarInfo = ji;
             })
             .catch((err) => {
-                console.log(err);
                 getManifestFromPath(path, (report, contents) => {
                     if (report) {
                         throw report;
@@ -107,13 +103,13 @@ var checkJar = function (req, res) {
 
                     var soughtKey = "\nBundle-SymbolicName:"
                     contents = "\n" + contents;
-                    jarInfo.isOSGi = contents.includes(soughtKey);
+                    jarInfo.osgiready = contents.includes(soughtKey);
 
                     data.create('jar', {
                         id: jarInfo.hash,
                         filenames: [jarInfo.filename],
-                        osgiready: jarInfo.isOSGi,
-                        urls: [jarInfo.url],
+                        osgiready: jarInfo.osgiready,
+                        urls: jarInfo.urls,
                         pom: [
                             {
                                 groupId: null,
