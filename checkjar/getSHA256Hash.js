@@ -1,16 +1,36 @@
 var fs = require('fs');
 var crypto = require('crypto');
 
-var getSHA256Hash = function(path, cb) {
-    var hash = crypto.createHash('sha256');
+var errorReport = require('./errorReport.js');
 
-    var stream = fs.createReadStream(path);
-    stream.on('data', (data) => {
-        hash.update(data);
-    });
+var getSHA256Hash = (path) => {
+    return new Promise((resolve, reject) => {
+        try {
+            var hash = crypto.createHash('sha256');
 
-    stream.on('end', () => {
-        cb(null, hash.digest('hex'));
+            var stream = fs.createReadStream(path);
+            stream.on('data', (data) => {
+                hash.update(data);
+            });
+
+            stream.on('end', () => {
+                resolve(hash.digest('hex'));
+            });
+
+            stream.on('error', (err) => {
+                var report = errorReport(
+                    err, 'failure.cannot_get_hash', 500,
+                    'Failed to get hash of ' + path +': ' + err);
+
+                reject(report);
+            });
+        } catch (err) {
+            var report = errorReport(
+                err, 'failure.cannot_get_hash', 500,
+                'Failed to get hash of ' + path +': ' + err);
+
+            reject(report);
+        }
     });
 };
 

@@ -77,34 +77,30 @@ var checkJar = function (req, res) {
         urls: [url]
     };
 
-    downloadToTempFile(url, (report, path, filename) => {
-        if (report) {
-            respondError(req, res, url, report);
+    downloadToTempFile(url)
+    .then((fileInfo) => {
+        jarInfo.temporaryPath = fileInfo.path;
+        jarInfo.filenames = [fileInfo.filename];
 
-            return;
-        }
-
-        jarInfo.temporaryPath = path;
-        jarInfo.filenames = [filename];
-
-        getSHA256Hash(path, (report, hash) => {
+        return getSHA256Hash(fileInfo.path)
+        .then((hash) => {
             jarInfo.id = hash;
             var data = WeDeploy.data('http://data.itjor.wedeploy.io');
 
-            data.get('jar/'+hash)
+            return data.get('jar/'+hash)
             .then((ji) => {
-                jarInfo = ji;
+                Object.assign(jarInfo, ji);
             })
             .catch((err) => {
-                return getManifestFromPath(path)
+                return getManifestFromPath(fileInfo.path)
                 .then((contents) => {
                     var soughtKey = "\nBundle-SymbolicName:"
                     contents = "\n" + contents;
                     jarInfo.osgiready = contents.includes(soughtKey);
 
                     data.create('jar', {
-                        id: jarInfo.hash,
-                        filenames: [jarInfo.filename],
+                        id: jarInfo.id,
+                        filenames: jarInfo.filenames,
                         osgiready: jarInfo.osgiready,
                         urls: jarInfo.urls,
                         pom: [
@@ -122,14 +118,14 @@ var checkJar = function (req, res) {
                     });
                 });
             })
-            .then(() => {
-                respondOK(req, res, jarInfo);
-            })
-            .catch((report) => {
-                respondError(req, res, url, report);
-            });
         });
-    });
+    })
+    .then(() => {
+        respondOK(req, res, jarInfo);
+    })
+    .catch((report) => {
+        respondError(req, res, url, report);
+    });;
 };
 
 var app = express();

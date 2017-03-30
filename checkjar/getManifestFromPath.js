@@ -4,10 +4,11 @@ var errorReport = require('./errorReport.js');
 
 var getManifestFromPath = (path) => {
     return new Promise((resolve, reject) => {
-        var manifest;
         try {
             var zip = new AdmZip(path);
-            manifest = zip.readAsText('META-INF/MANIFEST.MF');
+            var manifest = zip.readAsText('META-INF/MANIFEST.MF');
+
+            resolve(manifest);
         } catch (err) {
             var report = errorReport(
                 err, 'failure.cannot_find_manifest_mf', 415,
@@ -15,8 +16,6 @@ var getManifestFromPath = (path) => {
 
             reject(report);
         }
-
-        resolve(manifest);
     });
 };
 
