@@ -79,6 +79,24 @@ var checkURL = function (req, res) {
     });
 }
 
+var checkPOM = (req, res) => {
+    var filepath = path.join(
+        req.query.groupId.replace('.', '/'),
+        req.query.artifactId,
+        req.query.version,
+        req.query.artifactId + '-' + req.query.version + '.jar'
+    );
+
+    var url = 'http://search.maven.org/remotecontent?filepath='+filepath;
+
+    checkJar(url)
+    .then((jarInfo) => {
+        respondOK(req, res, jarInfo);
+    })
+    .catch((report) => {
+        respondError(req, res, url, report);
+    });
+};
 
 var app = express();
 
@@ -87,6 +105,7 @@ app.use(morgan('combined'));
 app.get('/', showIndex);
 
 app.get('/isit', checkURL);
+app.get('/pomit', checkPOM);
 
 app.listen(80, function () {
   console.log('Listening on port 80');
