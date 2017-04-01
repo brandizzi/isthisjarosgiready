@@ -7,9 +7,7 @@ var downloadToTempFile = require('./downloadToTempFile.js');
 var errorReport = require('./errorReport.js');
 var getManifestFromPath = require('./getManifestFromPath');
 var getSHA256Hash = require('./getSHA256Hash');
-
-
-const WeDeploy = require('wedeploy');
+var wdd = require('./weDeployData');
 
 var showIndex = function showIndex(req, res) {
         res.sendFile(path.join(__dirname + '/public/index.html'));
@@ -85,9 +83,8 @@ var checkJar = function (req, res) {
         return getSHA256Hash(fileInfo.path)
         .then((hash) => {
             jarInfo.id = hash;
-            var data = WeDeploy.data('http://data.itjor.wedeploy.io');
 
-            return data.get('jar/'+hash)
+            return wdd.get(hash)
             .then((ji) => {
                 Object.assign(jarInfo, ji);
             })
@@ -98,24 +95,7 @@ var checkJar = function (req, res) {
                     contents = "\n" + contents;
                     jarInfo.osgiready = contents.includes(soughtKey);
 
-                    data.create('jar', {
-                        id: jarInfo.id,
-                        filenames: jarInfo.filenames,
-                        osgiready: jarInfo.osgiready,
-                        urls: jarInfo.urls,
-                        pom: [
-                            {
-                                groupId: null,
-                                artifactId: null,
-                                version: null
-                            }
-                        ]
-                    })
-                    .then((a) => {
-                        console.log('document created', a);
-                    }).catch((b) => {
-                        console.error('error', b);
-                    });
+                    wdd.create(jarInfo);
                 });
             })
         });
