@@ -25,5 +25,16 @@ var get = (hash) => {
     return _getData().get('jar/'+hash);
 };
 
+var update = (ji) => {
+    _getData().delete('jar/'+ji.id)
+    .create('jar', ji)
+    .then((a) => {
+        console.log('document updated', a);
+    }).catch((b) => {
+        console.error('error', b);
+    });
+}
+
 exports.create = create;
 exports.get = get;
+exports.update = update;
