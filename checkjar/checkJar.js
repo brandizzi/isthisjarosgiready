@@ -85,12 +85,11 @@ var checkJar = (url, groupId, artifactId, version) => {
         };
 
         downloadToTempFile(url)
-        .then((fileInfo) => {
-            jarInfo.temporaryPath = fileInfo.path;
+        .then(fileInfo => {
             jarInfo.filenames = [fileInfo.filename];
 
             return getSHA256Hash(fileInfo.path)
-            .then((hash) => {
+            .then(hash => {
                 jarInfo.id = hash;
 
                 return wdd.get(hash)
@@ -103,9 +102,9 @@ var checkJar = (url, groupId, artifactId, version) => {
                         wdd.update(jarInfo);
                     }
                 })
-                .catch((err) => {
+                .catch(err => {
                     return getManifestFromPath(fileInfo.path)
-                    .then((contents) => {
+                    .then(contents => {
                         var soughtKey = "\nBundle-SymbolicName:"
                         contents = "\n" + contents;
                         jarInfo.osgiready = contents.includes(soughtKey);
@@ -118,7 +117,7 @@ var checkJar = (url, groupId, artifactId, version) => {
         .then(() => {
             resolve(jarInfo);
         })
-        .catch((report) => {
+        .catch(report => {
             reject(report);
         });
     });
