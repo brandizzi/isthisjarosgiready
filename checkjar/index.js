@@ -3,10 +3,9 @@ var morgan = require('morgan');
 var path = require('path');
 
 var fillTemplate = require('./fillTemplate.js');
-var downloadToTempFile = require('./downloadToTempFile.js');
 var errorReport = require('./errorReport.js');
-var getManifestFromPath = require('./getManifestFromPath');
-var getSHA256Hash = require('./getSHA256Hash');
+var checkJar = require('./checkJar.js');
+
 var wdd = require('./weDeployData');
 
 var showIndex = function showIndex(req, res) {
@@ -68,45 +67,18 @@ var respondOK = (req, res, jarInfo) => {
     });
 };
 
-var checkJar = function (req, res) {
+var checkURL = function (req, res) {
     var url = req.query.url;
 
-    var jarInfo = {
-        urls: [url]
-    };
-
-    downloadToTempFile(url)
-    .then((fileInfo) => {
-        jarInfo.temporaryPath = fileInfo.path;
-        jarInfo.filenames = [fileInfo.filename];
-
-        return getSHA256Hash(fileInfo.path)
-        .then((hash) => {
-            jarInfo.id = hash;
-
-            return wdd.get(hash)
-            .then((ji) => {
-                Object.assign(jarInfo, ji);
-            })
-            .catch((err) => {
-                return getManifestFromPath(fileInfo.path)
-                .then((contents) => {
-                    var soughtKey = "\nBundle-SymbolicName:"
-                    contents = "\n" + contents;
-                    jarInfo.osgiready = contents.includes(soughtKey);
-
-                    wdd.create(jarInfo);
-                });
-            })
-        });
-    })
-    .then(() => {
+    checkJar(url)
+    .then((jarInfo) => {
         respondOK(req, res, jarInfo);
     })
     .catch((report) => {
         respondError(req, res, url, report);
-    });;
-};
+    });
+}
+
 
 var app = express();
 
@@ -114,7 +86,7 @@ app.use(morgan('combined'));
 
 app.get('/', showIndex);
 
-app.get('/isit', checkJar);
+app.get('/isit', checkURL);
 
 app.listen(80, function () {
   console.log('Listening on port 80');

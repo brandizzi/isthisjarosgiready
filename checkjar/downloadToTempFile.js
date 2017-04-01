@@ -36,6 +36,7 @@ var downloadToTempFile = (url) => {
                     'Could not creawte a temporary file.');
 
                 reject(report);
+                return;
             }
 
 
@@ -48,6 +49,7 @@ var downloadToTempFile = (url) => {
                     'Failed to get file from ' + url + ': ' + err);
 
                 reject(report);
+                return;
             }
 
             req.on('response', (response) => {
