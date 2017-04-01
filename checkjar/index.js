@@ -9,7 +9,7 @@ var checkJar = require('./checkJar.js');
 var wdd = require('./weDeployData');
 
 var showIndex = function showIndex(req, res) {
-        res.sendFile(path.join(__dirname + '/public/index.html'));
+    res.sendFile(path.join(__dirname + '/public/index.html'));
 };
 
 var respondError = (req, res, url, report) => {
@@ -80,16 +80,18 @@ var checkURL = function (req, res) {
 }
 
 var checkPOM = (req, res) => {
+    var groupId = req.query.groupId;
+    var artifactId = req.query.artifactId;
+    var version = req.query.version;
+
     var filepath = path.join(
-        req.query.groupId.replace('.', '/'),
-        req.query.artifactId,
-        req.query.version,
-        req.query.artifactId + '-' + req.query.version + '.jar'
+        groupId.replace('.', '/'), artifactId, version,
+        artifactId + '-' + version + '.jar'
     );
 
     var url = 'http://search.maven.org/remotecontent?filepath='+filepath;
 
-    checkJar(url)
+    checkJar(url, groupId, artifactId, version)
     .then((jarInfo) => {
         respondOK(req, res, jarInfo);
     })

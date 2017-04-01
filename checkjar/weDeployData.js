@@ -13,14 +13,6 @@ var create = (jarInfo) => {
     var ji = {};
     Object.assign(ji, jarInfo);
 
-    ji.pom = [
-        {
-            groupId: null,
-            artifactId: null,
-            version: null
-        }
-    ];
-
     _getData().create('jar', ji)
     .then((a) => {
         console.log('document created', a);

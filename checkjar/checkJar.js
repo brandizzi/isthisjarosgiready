@@ -3,10 +3,17 @@ var getManifestFromPath = require('./getManifestFromPath');
 var getSHA256Hash = require('./getSHA256Hash');
 var wdd = require('./weDeployData');
 
+var getPOMObj = (groupId, artifactId, version) => {
+    if (groupId && artifactId && version) {
+        return {groupId, artifactId, version};
+    }
+};
+
 var checkJar = (url, groupId, artifactId, version) => {
     return new Promise((resolve, reject) => {
         var jarInfo = {
-            urls: [url]
+            urls: [url],
+            pom: [getPOMObj(groupId, artifactId, version)]
         };
 
         downloadToTempFile(url)
