@@ -1,6 +1,0 @@
-[
-	{
-		"path": "/jar",
-		"method": ["GET", "POST", "PUT", "DELETE"]
-	}
-]
