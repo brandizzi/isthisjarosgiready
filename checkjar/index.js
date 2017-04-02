@@ -57,7 +57,12 @@ var respondOK = (req, res, jarInfo) => {
 
         var jarURLs = doc.getElementsByClassName('jar-urls');
 
-        jarURLs[0].innerHTML = '<li>' + jarInfo.urls[0] + '</li>';
+        var urlsInnerHTML  = '';
+        for (var url of jarInfo.urls) {
+            urlsInnerHTML = urlsInnerHTML + '<li>' + url + '</li>';
+        }
+
+        jarURLs[0].innerHTML = urlsInnerHTML;
 
         var jarIsOSGi = doc.getElementsByClassName('jar-is-osgi');
 
