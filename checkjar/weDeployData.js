@@ -26,12 +26,15 @@ var get = (hash) => {
 };
 
 var update = (ji) => {
-    _getData().delete('jar/'+ji.id)
-    .create('jar', ji)
-    .then((a) => {
-        console.log('document updated', a);
-    }).catch((b) => {
-        console.error('error', b);
+    var data = _getData();
+    return data.delete('jar/'+ji.id)
+    .then(()=> {
+        return data.create('jar', ji)
+        .then((a) => {
+            console.log('document updated', a);
+        }).catch((b) => {
+            console.error('error', b);
+        });
     });
 }
 

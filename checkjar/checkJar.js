@@ -1,5 +1,4 @@
-var deepEqual = require('deep-equal');
-
+var models = require('./models.js');
 var downloadToTempFile = require('./downloadToTempFile.js');
 var getManifestFromPath = require('./getManifestFromPath');
 var getSHA256Hash = require('./getSHA256Hash');
@@ -7,52 +6,8 @@ var wdd = require('./weDeployData');
 
 var getPOMObj = (groupId, artifactId, version) => {
     if (groupId && artifactId && version) {
-        return {groupId, artifactId, version};
+        return new models.POM(groupId, artifactId, version);
     }
-};
-
-var getPOMList = (pom) => {
-    var list = [];
-
-    if (pom) {
-        list.push(pom);
-    }
-
-    return list;
-};
-
-var hasPOM = (list, pom) => {
-    if (!pom) {
-        return false;
-    }
-
-    return list.some(
-        (item) => item.groupId === pom.groupId &&
-                item.artifactId === pom.artifactId &&
-                item.version === pom.version
-    );
-}
-
-var mergeJarInfo = (jarInfo, ji) => {
-    var filenamesSet = new Set(jarInfo.filenames, ji.filenames);
-    var urlsSet = new Set(jarInfo.urls, ji.urls);
-
-    var pomsTable = {};
-
-    ([].concat(jarInfo.pom, ji.pom)).forEach(
-        (item) => {
-            var key = item.groupId+'|'+item.artifactId+'|'+item.version;
-            pomsTable[key] = item;
-        }
-    );
-
-    var merged = {};
-    Object.assign(merged, jarInfo, ji);
-    merged.pom = Object.keys(pomsTable).map((k) => pomsTable[k]);
-    merged.filenames = new Array(...filenamesSet);
-    merged.urls = new Array(...urlsSet);
-
-    return merged;
 };
 
 var sorted = (array) => {
@@ -79,14 +34,14 @@ var equalJarInfo = (ji1, ji2) => {
 var checkJar = (url, groupId, artifactId, version) => {
     return new Promise((resolve, reject) => {
         var pom = getPOMObj(groupId, artifactId, version);
-        var jarInfo = {
-            urls: [url],
-            pom: getPOMList(pom)
-        };
+        var jarInfo = new models.JarInfo()
+
+        jarInfo.addURL(url);
+        jarInfo.addPOM(pom);
 
         downloadToTempFile(url)
         .then(fileInfo => {
-            jarInfo.filenames = [fileInfo.filename];
+            jarInfo.addFilename(fileInfo.filename);
 
             return getSHA256Hash(fileInfo.path)
             .then(hash => {
@@ -94,11 +49,9 @@ var checkJar = (url, groupId, artifactId, version) => {
 
                 return wdd.get(hash)
                 .then(ji => {
-                    console.log(JSON.stringify([jarInfo, ji]));
-                    jarInfo = mergeJarInfo(jarInfo, ji);
+                    jarInfo.merge(ji);
 
-                    if (!equalJarInfo(jarInfo, ji)) {
-                        console.log(JSON.stringify([jarInfo, ji]));
+                    if (!jarInfo.equals(ji)) {
                         wdd.update(jarInfo);
                     }
                 })
