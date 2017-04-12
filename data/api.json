@@ -2,5 +2,9 @@
 	{
 		"path": "/jar",
 		"method": ["GET", "POST", "PUT", "DELETE"]
+	},
+	{
+		"path": "/parking",
+		"method": ["GET", "POST", "PUT", "DELETE"]
 	}
 ]
