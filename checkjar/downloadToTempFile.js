@@ -28,6 +28,8 @@ var extractJarName = function(response) {
 }
 
 var downloadToTempFile = (url) => {
+    console.log('downloading ' + url);
+
     return new Promise((resolve, reject) => {
         tmp.file((err, path) => {
             if (err) {
@@ -36,6 +38,9 @@ var downloadToTempFile = (url) => {
                     'Could not creawte a temporary file.');
 
                 reject(report);
+
+                console.warn('failed to download ' + url);
+
                 return;
             }
 
@@ -49,6 +54,9 @@ var downloadToTempFile = (url) => {
                     'Failed to get file from ' + url + ': ' + err);
 
                 reject(report);
+
+                console.warn('failed to download ' + url);
+
                 return;
             }
 
@@ -68,6 +76,10 @@ var downloadToTempFile = (url) => {
                 }
 
                 stream.on('finish', () => {
+                    console.log(
+                        'downloaded ' + url + ' (original file name ' +
+                        filename + ')  to ' + path);
+
                     resolve({
                         path: path,
                         filename: filename
@@ -78,6 +90,9 @@ var downloadToTempFile = (url) => {
                     var report = errorReport(
                         err, 'failure.cannot_pipe_to_stream', 500,
                         'Failed to pipe ' + url + ' to ' + path ,+': ' + err);
+
+
+                    console.warn('failed to download ' + url);
 
                     reject(report);
                 });

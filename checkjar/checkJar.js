@@ -39,6 +39,8 @@ var checkJar = (url, groupId, artifactId, version) => {
         jarInfo.addURL(url);
         jarInfo.addPOM(pom);
 
+        console.log('checking ' + url);
+
         downloadToTempFile(url)
         .then(fileInfo => {
             jarInfo.addFilename(fileInfo.filename);
@@ -68,9 +70,13 @@ var checkJar = (url, groupId, artifactId, version) => {
             });
         })
         .then(() => {
+            console.log('checked: ' + url);
+
             resolve(jarInfo);
         })
         .catch(report => {
+            console.warn('failed checking ' + url);
+
             reject(report);
         });
     });
