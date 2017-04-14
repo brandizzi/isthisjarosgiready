@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A boilerplate that demonstrates the Node.js container",
   "main": "index.js",
+  "license": " MIT-CMU",
   "scripts": {
     "start": "node index.js"
   },
