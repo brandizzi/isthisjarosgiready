@@ -34,7 +34,8 @@ var equalJarInfo = (ji1, ji2) => {
 var checkJar = (url, groupId, artifactId, version) => {
     return new Promise((resolve, reject) => {
         var pom = getPOMObj(groupId, artifactId, version);
-        var jarInfo = new models.JarInfo()
+        var jarInfo = new models.JarInfo();
+        var toCreate, toUpdate;
 
         jarInfo.addURL(url);
         jarInfo.addPOM(pom);
@@ -55,7 +56,7 @@ var checkJar = (url, groupId, artifactId, version) => {
                     jarInfo.merge(ji);
 
                     if (!jarInfo.equals(ji)) {
-                        wdd.update(jarInfo);
+                        toUpdate = jarInfo;
                     }
                 })
                 .catch(err => {
@@ -66,20 +67,28 @@ var checkJar = (url, groupId, artifactId, version) => {
                         contents = "\n" + contents;
                         jarInfo.osgiready = contents.includes(soughtKey);
 
-                        wdd.create(jarInfo);
+                        toCreate = jarInfo;
                     });
                 })
             });
         })
         .then(() => {
             console.log('checked: ' + url);
-
+            console.log('info: ' + JSON.stringify(jarInfo));
             resolve(jarInfo);
         })
         .catch(report => {
             console.warn('failed checking ' + url);
 
             reject(report);
+        }).then(() => {
+            if (toUpdate) {
+                return wdd.update(jarInfo);
+            } else if (toCreate) {
+                return wdd.create(toCreate);
+            }
+        }).then(() => {
+            console.warn('Frankly I don\'t know if we need other then here tbh');
         });
     });
 };
