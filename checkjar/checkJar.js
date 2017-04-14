@@ -76,17 +76,17 @@ var checkJar = (url, groupId, artifactId, version) => {
             console.log('checked: ' + url);
             console.log('info: ' + JSON.stringify(jarInfo));
             resolve(jarInfo);
-        })
-        .catch(report => {
-            console.warn('failed checking ' + url);
 
-            reject(report);
-        }).then(() => {
             if (toUpdate) {
                 return wdd.update(jarInfo);
             } else if (toCreate) {
                 return wdd.create(toCreate);
             }
+        })
+        .catch(report => {
+            console.warn('failed checking ' + url);
+
+            reject(report);
         }).then(() => {
             console.warn('Frankly I don\'t know if we need other then here tbh');
         });
