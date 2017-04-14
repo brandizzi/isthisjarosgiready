@@ -48,6 +48,7 @@ var checkJar = (url, groupId, artifactId, version) => {
 
             return getSHA256Hash(fileInfo.path)
             .then(hash => {
+                console.log('trying to get info ' + hash + ' from db');
                 jarInfo.id = hash;
 
                 return wdd.get(hash)
@@ -60,7 +61,7 @@ var checkJar = (url, groupId, artifactId, version) => {
                     }
                 })
                 .catch(err => {
-                    console.log('no jar info from wdd');
+                    console.log('no info' + hash + ' from wdd');
                     return getManifestFromPath(fileInfo.path)
                     .then(contents => {
                         var soughtKey = "\nBundle-SymbolicName:"
