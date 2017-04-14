@@ -51,6 +51,7 @@ var checkJar = (url, groupId, artifactId, version) => {
 
                 return wdd.get(hash)
                 .then(ji => {
+                    console.log('got jar info from wdd');
                     jarInfo.merge(ji);
 
                     if (!jarInfo.equals(ji)) {
@@ -58,6 +59,7 @@ var checkJar = (url, groupId, artifactId, version) => {
                     }
                 })
                 .catch(err => {
+                    console.log('no jar info from wdd');
                     return getManifestFromPath(fileInfo.path)
                     .then(contents => {
                         var soughtKey = "\nBundle-SymbolicName:"
