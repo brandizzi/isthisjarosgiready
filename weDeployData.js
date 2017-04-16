@@ -26,6 +26,10 @@ var get = (hash) => {
     return _getData().get('jar/'+hash);
 };
 
+var all = () => {
+    return _getData().get('jar');
+}
+
 var update = (ji) => {
     console.log('trying to update ');
     var data = _getData();
@@ -42,6 +46,7 @@ var update = (ji) => {
     });
 }
 
+exports.all = all;
 exports.create = create;
 exports.get = get;
 exports.update = update;

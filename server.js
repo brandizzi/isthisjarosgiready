@@ -16,10 +16,6 @@ var respondError = (req, res, url, report) => {
     res.status(report.statusCode);
 
     fillTemplate(res, 'public/error.html', (doc) => {
-        if (report.failureType == 'failure.cannot_parse_template') {
-            return '<p>Template error: ' + JSON.stringify(err);
-        }
-
         var title = doc.getElementsByTagName("title");
 
         title[0].textContent = "We could not check " + url + " :(";
@@ -72,6 +68,26 @@ var respondOK = (req, res, jarInfo) => {
     });
 };
 
+var respondAll = (req, res, jarInfos) => {
+    fillTemplate(res, 'public/all.html', (doc) => {
+        var jarTable = doc.getElementsByClassName('jar-infos')[0];
+        var jarRow = jarTable.getElementsByClassName('jar-row')[0];
+        jarRow.remove();
+        for (var ji of jarInfos) {
+            var row = jarRow.cloneNode(true);
+            var filename = row.getElementsByClassName('filename')[0];
+            filename.textContent = ji.filenames[0];
+            var isOSGi = row.getElementsByClassName('jar-is-osgi')[0];
+            isOSGi.textContent = ji.osgiready? 'yes' : 'no';
+            var moreInfo = row.getElementsByClassName('more-info')[0];
+            moreInfo.innerHTML = '<a href="/isit?url=' + ji.urls[0] + '">See more</a>';
+            jarTable.appendChild(row);
+        }
+
+        return doc;
+    });
+};
+
 var checkURL = function (req, res) {
     var url = req.query.url;
 
@@ -105,6 +121,13 @@ var checkPOM = (req, res) => {
     });
 };
 
+var showAll = (req, res) => {
+  wdd.all()
+  .then((jarInfos) => {
+    respondAll(req, res, jarInfos);
+  });
+};
+
 var app = express();
 
 app.use(morgan('combined'));
@@ -113,6 +136,8 @@ app.get('/', showIndex);
 
 app.get('/isit', checkURL);
 app.get('/pomit', checkPOM);
+app.get('/all', showAll);
+
 
 var listener = app.listen(process.env.PORT, function () {
   console.log('Listening on port 80');
