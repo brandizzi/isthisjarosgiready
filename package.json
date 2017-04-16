@@ -5,7 +5,7 @@
   "main": "index.js",
   "license": " MIT-CMU",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.14.0",
