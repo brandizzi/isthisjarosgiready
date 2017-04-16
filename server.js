@@ -114,7 +114,6 @@ app.get('/', showIndex);
 app.get('/isit', checkURL);
 app.get('/pomit', checkPOM);
 
-app.listen(80, function () {
+var listener = app.listen(process.env.PORT, function () {
   console.log('Listening on port 80');
 });
-
