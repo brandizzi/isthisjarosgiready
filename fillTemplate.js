@@ -1,4 +1,5 @@
 var jsdom = require("jsdom");
+var errorReport = require('./errorReport');
 
 var fillTemplate = (res, path, filler) => {
     jsdom.env({
@@ -7,12 +8,12 @@ var fillTemplate = (res, path, filler) => {
         ProcessExternalResources: false,
         done: (err, window) => {
             if (err) {
-                report = errorReport(
+                var report = errorReport(
                     err, 'failure.cannot_parse_template', 500,
                     'Failed to parse template ' + path + ': ' + err);
 
                 res.status(report.statusCode);
-                res.write(fillErrorPage(null, url, report));
+                res.write('ops: ' + JSON.stringify(report));
 
                 res.end();
                 window.close();
@@ -22,7 +23,7 @@ var fillTemplate = (res, path, filler) => {
 
             var doc = window.document;
 
-            content = filler(doc);
+            var content = filler(doc);
 
             res.write(jsdom.serializeDocument(content));
             res.end();

@@ -31,7 +31,7 @@
 	    <h2>Give me its URL</h2>
 	    <form action="/isit" class="form-inline">
 		    <input name="url" type="text" placeholder="URL to a JAR file" size="50" class="form-control">
-		    <input type="submit" value="Check that!" class="btn btn-primary" class="form-control">
+		    <input type="submit" value="Check that!" class="btn btn-primary form-control">
 	    </form>
 	    <h2>Or do you have maven information?</h2>
 	    <form action="/pomit" class="form-inline">
@@ -40,6 +40,10 @@
 		    <input name="version" type="text" placeholder="Version" size="5" class="form-control">   
 		    <input type="submit" value="Check that!" class="btn btn-primary">
 	    </form>
+      <hr>
+      <p>
+        You can also check some of the JAR files <a href="/all">we already checked!</a>.
+      </p>
 	</div>
 </body>
 </html>

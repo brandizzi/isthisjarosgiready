@@ -27,10 +27,6 @@ var sortedJarInfo = (jarInfo) => {
     return copy;
 };
 
-var equalJarInfo = (ji1, ji2) => {
-    return deepEqual(sortedJarInfo(ji1), sortedJarInfo(ji2));
-};
-
 var checkJar = (url, groupId, artifactId, version) => {
     return new Promise((resolve, reject) => {
         var pom = getPOMObj(groupId, artifactId, version);
