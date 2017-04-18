@@ -55,7 +55,7 @@ var respondOK = (req, res, jarInfo) => {
 
         var urlsInnerHTML  = '';
         for (var url of jarInfo.urls) {
-            urlsInnerHTML = urlsInnerHTML + '<li>' + url + '</li>';
+            urlsInnerHTML = urlsInnerHTML + '<li>' + linkToURL(url) + '</li>';
         }
 
         jarURLs[0].innerHTML = urlsInnerHTML;
@@ -94,6 +94,10 @@ var yesNoSpan = function(jarInfo) {
   } else {
     return '<span class="label label-danger">no</span>';
   }
+}
+
+var linkToURL = function(url) {
+  return '<a href="'+url+'">'+url+'</a>';
 }
 
 var checkURL = function (req, res) {
