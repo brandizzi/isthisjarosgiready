@@ -62,7 +62,7 @@ var respondOK = (req, res, jarInfo) => {
 
         var jarIsOSGi = doc.getElementsByClassName('jar-is-osgi');
 
-        jarIsOSGi[0].innerHTML = ""+ jarInfo.osgiready;
+        jarIsOSGi[0].innerHTML = yesNoSpan(jarInfo);
 
         return doc;
     });
@@ -78,7 +78,7 @@ var respondAll = (req, res, jarInfos) => {
             var filename = row.getElementsByClassName('filename')[0];
             filename.textContent = ji.filenames[0];
             var isOSGi = row.getElementsByClassName('jar-is-osgi')[0];
-            isOSGi.textContent = ji.osgiready? 'yes' : 'no';
+            isOSGi.innerHTML = yesNoSpan(ji);
             var moreInfo = row.getElementsByClassName('more-info')[0];
             moreInfo.innerHTML = '<a href="/isit?url=' + ji.urls[0] + '">See more</a>';
             jarTable.appendChild(row);
@@ -87,6 +87,14 @@ var respondAll = (req, res, jarInfos) => {
         return doc;
     });
 };
+
+var yesNoSpan = function(jarInfo) {
+  if (jarInfo.osgiready) {
+    return '<span class="label label-success">yes</span>';
+  } else {
+    return '<span class="label label-danger">no</span>';
+  }
+}
 
 var checkURL = function (req, res) {
     var url = req.query.url;
